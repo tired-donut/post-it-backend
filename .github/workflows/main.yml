@@ -7,6 +7,76 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: setup
-      run: |
-        echo "setup"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/checkout@v4
+
+      - name: Restore dependencies
+        run: |
+          dotnet restore
+
+      - name: Build project
+        run: |
+          dotnet build "Backend.csproj" -c Release
+          dotnet publish "Backend.csproj" -c Release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: .
+  
+  migrate:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_CONNECTION: ${{ secrets.DATABASE_CONNECTION }}
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install dotnet ef tool
+        run: |
+          dotnet tool install --global dotnet-ef
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+
+      - name: Run migrations
+        run: |
+          dotnet ef database update --connection "$DATABASE_CONNECTION"
+  
+  deploy:
+    needs: migrate
+    runs-on: ubuntu-latest
+    env:
+      REMOTE_SSH_PRIVATE_KEY: ${{ secrets.REMOTE_SSH_PRIVATE_KEY }}
+
+      REMOTE_USER: ${{ secrets.REMOTE_USER }}
+      REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+
+      APPLICATION_PATH: ${{ secrets.APPLICATION_PATH }}
+      APPLICATION_START: ${{ secrets.APPLICATION_START}}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+
+      - name: Configure ssh key
+        run: |
+          echo "$REMOTE_SSH_PRIVATE_KEY" > key
+          chmod 600 key
+
+      - name: Copy files
+        run: |
+          scp -o StrictHostKeyChecking=no -r -i key bin/Release/net8.0/* "$REMOTE_USER@$REMOTE_HOST:$APPLICATION_PATH"
+
+      - name: Run application
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key "$REMOTE_USER@$REMOTE_HOST" "$APPLICATION_START"
+
+
+          
