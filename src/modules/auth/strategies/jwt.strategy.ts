@@ -6,7 +6,6 @@ import { User } from 'src/modules/users/entities/user.entity';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
 	public constructor() {
-		console.log(process.env.TOKEN_SECRET);
 		super({
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 			secretOrKey: process.env.TOKEN_SECRET,
