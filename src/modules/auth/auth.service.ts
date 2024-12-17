@@ -31,16 +31,23 @@ export class AuthService {
 	public async validate(
 		data: Pick<User, 'username' | 'password'>,
 	): Promise<Pick<User, 'username'>> {
-		const user = await this._userService.findByUsername({
-			username: data.username,
-		});
+		try {
+			const user = await this._userService.findByUsername({
+				username: data.username,
+			});
 
-		if (!user || !(await HashUtil.compare(data.password, user.password)))
+			if (
+				!user ||
+				!(await HashUtil.compare(data.password, user.password))
+			)
+				return null;
+
+			return {
+				username: user.username,
+			};
+		} catch (e) {
 			return null;
-
-		return {
-			username: user.username,
-		};
+		}
 	}
 
 	public async signIn(
