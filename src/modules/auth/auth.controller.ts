@@ -40,6 +40,7 @@ export class AuthController {
 		@Request() req: any,
 	): Promise<{ accessToken: string; type: 'Bearer' }> {
 		const signIn = await this._authService.signIn({
+			id: req.user.id,
 			username: req.user.username,
 		});
 

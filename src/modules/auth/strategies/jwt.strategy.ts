@@ -12,8 +12,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 		});
 	}
 
-	public validate(payload: Pick<User, 'username'>): Pick<User, 'username'> {
+	public validate(
+		payload: Pick<User, 'id' | 'username'>,
+	): Pick<User, 'id' | 'username'> {
 		return {
+			id: payload.id,
 			username: payload.username,
 		};
 	}

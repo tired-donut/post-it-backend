@@ -30,7 +30,7 @@ export class AuthService {
 
 	public async validate(
 		data: Pick<User, 'username' | 'password'>,
-	): Promise<Pick<User, 'username'>> {
+	): Promise<Pick<User, 'id' | 'username'>> {
 		try {
 			const user = await this._userService.findByUsername({
 				username: data.username,
@@ -43,6 +43,7 @@ export class AuthService {
 				return null;
 
 			return {
+				id: user.id,
 				username: user.username,
 			};
 		} catch (e) {
@@ -51,10 +52,11 @@ export class AuthService {
 	}
 
 	public async signIn(
-		data: Pick<User, 'username'>,
+		data: Pick<User, 'id' | 'username'>,
 	): Promise<{ accessToken: string }> {
 		return {
 			accessToken: this._jwtService.sign({
+				id: data.id,
 				username: data.username,
 			}),
 		};

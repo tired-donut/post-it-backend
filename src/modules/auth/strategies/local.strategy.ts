@@ -13,7 +13,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 	async validate(
 		username: User['username'],
 		password: User['password'],
-	): Promise<Pick<User, 'username'>> {
+	): Promise<Pick<User, 'id' | 'username'>> {
 		const user = await this._authService.validate({
 			username: username,
 			password: password,
@@ -22,6 +22,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
 		if (!user) throw new UnauthorizedException('Bad credentials');
 
 		return {
+			id: user.id,
 			username: user.username,
 		};
 	}
