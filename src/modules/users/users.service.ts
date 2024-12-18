@@ -6,12 +6,15 @@ import {
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PostsService } from '../posts/posts.service';
+import { Post } from '../posts/entities/post.entity';
 
 @Injectable()
 export class UsersService {
 	public constructor(
 		@InjectRepository(User)
 		private readonly _userRepository: Repository<User>,
+		private readonly _postsService: PostsService,
 	) {}
 
 	public async create(
@@ -63,5 +66,15 @@ export class UsersService {
 			email: user.email,
 			password: user.password,
 		};
+	}
+
+	public async findPostsByUsername(
+		data: Pick<User, 'username'>,
+	): Promise<Pick<Post, 'id' | 'content' | 'date'>[]> {
+		const user = await this.findByUsername({ username: data.username });
+
+		return await this._postsService.findByUsername({
+			username: user.username,
+		});
 	}
 }
